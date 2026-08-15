@@ -15,7 +15,7 @@ For a direct Paper 26.2 installation:
 5. Start Paper once and review `plugins/EaglercraftXServer/listener.yml` and `settings.yml`.
 6. Put a TLS-capable reverse proxy such as Caddy or nginx in front of the listener for public `wss://` access, or configure the plugin's listener TLS settings.
 
-The combined plugin intentionally does not declare `api-version: 26.2`, because the same JAR also targets old Bukkit servers. Paper therefore reports it as a legacy plugin and initializes legacy material support. A future Paper-only artifact can eliminate that warning and startup cost without dropping legacy compatibility from the combined JAR.
+The Bukkit plugin declares `api-version: 1.13`, which avoids Paper's legacy-plugin warning and legacy material initialization while retaining compatibility with modern Bukkit servers. It no longer loads on Bukkit versions older than 1.13.
 
 ## Build and verification
 
@@ -23,7 +23,7 @@ The combined plugin intentionally does not declare `api-version: 26.2`, because 
 .\gradlew.bat clean build core:shadowJar
 ```
 
-The plugin is compiled as Java 17 bytecode and can run on Paper's Java 25 runtime. The Paper 26.2 compatibility fixes are reflection-based so the project does not need to replace its Paper 1.12.2 compile-only dependency or force every BungeeCord/Velocity artifact to require Java 25.
+The project is compiled for Java 25. The Paper 26.2 compatibility fixes are reflection-based, so the project does not need to replace its Paper 1.12.2 compile-only dependency.
 
 The compatibility smoke tests used Paper 26.2 builds 87 and 111 with Java 25 on Windows and Linux. They verified:
 

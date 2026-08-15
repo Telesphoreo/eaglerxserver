@@ -37,7 +37,7 @@ Please see the [Releases](https://github.com/lax1dude/eaglerxserver/releases) ta
 > [!IMPORTANT]
 > EaglerXServer works best when installed on a reverse proxy (BungeeCord, Velocity). Direct Bukkit/Spigot/Paper networking support is version-sensitive. This fork includes a compatibility path for Paper 26.2; see [PAPER_26_2.md](PAPER_26_2.md) for build, installation, and validation details.
 
-**You must be using Java 17 or greater!**
+**You must be using Java 25 or greater!**
 
 To get started, place the EaglerXServer JAR in the "plugins" folder of your Spigot, BungeeCord, or Velocity server. In most cases you will also need to use ViaVersion, ViaBackwards, and ViaRewind to make your Spigot servers compatible with 1.8. If you would like to support 1.5, add the EaglerXRewind JAR to the "plugins" folder as well. Add EaglerMOTD for animated MOTDs and EaglerWeb if you want to host a website from your server.
 
