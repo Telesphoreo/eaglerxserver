@@ -12,12 +12,12 @@ subprojects {
 			url = uri("https://repo.papermc.io/repository/maven-public/")
 		}
 		maven {
-			name = "spigotmc"
-			url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-		}
-		maven {
 			name = "codemc"
 			url = uri("https://repo.codemc.org/repository/maven-public/")
+		}
+		maven {
+			name = "spigotmc"
+			url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
 		}
 		maven {
 			name = "sonatype-oss"
@@ -36,7 +36,7 @@ subprojects {
 
 		java {
 			toolchain {
-				languageVersion = JavaLanguageVersion.of(17)
+				languageVersion = JavaLanguageVersion.of(25)
 			}
 		}
 
