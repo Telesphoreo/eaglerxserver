@@ -8,5 +8,4 @@ dependencies {
 	compileOnly project(":api-bukkit")
 	compileOnly(libs.paper.api)
 	compileOnly(libs.pluginannotations)
-	annotationProcessor(libs.pluginannotations)
 }

@@ -1,0 +1,10 @@
+name: EaglercraftXServer
+version: 1.1.1
+description: Official EaglercraftX plugin for Spigot and Paper servers
+author: lax1dude
+website: https://lax1dude.net/eaglerxserver
+main: net.lax1dude.eaglercraft.backend.server.bukkit.PlatformPluginBukkit
+api-version: '1.13'
+softdepend:
+  - SkinsRestorer
+prefix: EaglerXServer
