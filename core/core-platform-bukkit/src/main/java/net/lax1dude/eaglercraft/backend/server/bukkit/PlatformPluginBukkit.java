@@ -56,7 +56,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -167,9 +166,6 @@ public class PlatformPluginBukkit extends JavaPlugin implements IPlatform<Player
 		enableNativeTransport = Epoll.isAvailable() && BukkitUnsafe.isEnableNativeTransport(server);
 		eventLoopGroup = BukkitUnsafe.getEventLoopGroup(server, enableNativeTransport);
 		postLoginInjector = new PlayerPostLoginInjector(this);
-		if (enableNativeTransport && !(eventLoopGroup instanceof EpollEventLoopGroup)) {
-			enableNativeTransport = false;
-		}
 		Init<Player> init = new InitNonProxying<Player>() {
 
 			@Override
