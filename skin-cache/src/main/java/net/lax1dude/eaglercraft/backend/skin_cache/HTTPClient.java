@@ -17,11 +17,14 @@
 package net.lax1dude.eaglercraft.backend.skin_cache;
 
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -72,11 +75,25 @@ public class HTTPClient implements IHTTPClient {
 		protected final String method;
 		protected final URI requestURI;
 		protected final Consumer<Response> responseCallback;
+		protected final RedirectTracker redirectTracker;
+		protected final boolean ssl;
+		protected final String host;
+		protected final int port;
+		protected final InetAddress[] addresses;
+		protected final int addressIndex;
 
-		protected NettyHttpChannelFutureListener(String method, URI requestURI, Consumer<Response> responseCallback) {
+		protected NettyHttpChannelFutureListener(String method, URI requestURI, Consumer<Response> responseCallback,
+				RedirectTracker redirectTracker, boolean ssl, String host, int port, InetAddress[] addresses,
+				int addressIndex) {
 			this.method = method;
 			this.requestURI = requestURI;
 			this.responseCallback = responseCallback;
+			this.redirectTracker = redirectTracker;
+			this.ssl = ssl;
+			this.host = host;
+			this.port = port;
+			this.addresses = addresses;
+			this.addressIndex = addressIndex;
 		}
 
 		@Override
@@ -89,8 +106,15 @@ public class HTTPClient implements IHTTPClient {
 				request.headers().set(HttpHeaderNames.USER_AGENT, userAgent);
 				future.channel().writeAndFlush(request);
 			} else {
-				addressCache.invalidate(requestURI.getHost());
-				responseCallback.accept(new Response(new IOException("Connection failed")));
+				if (addressIndex + 1 < addresses.length) {
+					connect(method, requestURI, responseCallback, redirectTracker, ssl, host, port, addresses,
+							addressIndex + 1);
+				} else {
+					addressCache.invalidate(host);
+					responseCallback.accept(new Response(new IOException(
+							"Connection failed after trying " + addresses.length + " address(es) for " + host,
+							future.cause())));
+				}
 			}
 		}
 
@@ -206,7 +230,7 @@ public class HTTPClient implements IHTTPClient {
 
 	}
 
-	private final Cache<String, InetAddress> addressCache = CacheBuilder.newBuilder()
+	private final Cache<String, InetAddress[]> addressCache = CacheBuilder.newBuilder()
 			.expireAfterWrite(15L, TimeUnit.MINUTES).build();
 	private final Supplier<Bootstrap> bootstrapper;
 	private final String userAgent;
@@ -242,21 +266,28 @@ public class HTTPClient implements IHTTPClient {
 		}
 
 		String host = uri.getHost();
-		InetAddress inetHost = addressCache.getIfPresent(host);
-		if (inetHost == null) {
+		InetAddress[] addresses = addressCache.getIfPresent(host);
+		if (addresses == null) {
 			try {
-				inetHost = InetAddress.getByName(host);
+				addresses = InetAddress.getAllByName(host);
 			} catch (UnknownHostException ex) {
 				responseCallback.accept(new Response(ex));
 				return;
 			}
-			addressCache.put(host, inetHost);
+			Arrays.sort(addresses, Comparator.comparingInt(address -> address instanceof Inet4Address ? 0 : 1));
+			addressCache.put(host, addresses);
 		}
-		InetSocketAddress addr = new InetSocketAddress(inetHost, port);
+		connect(redirectTracker.method, uri, responseCallback, redirectTracker, ssl, host, port, addresses, 0);
+	}
+
+	private void connect(String method, URI uri, Consumer<Response> responseCallback, RedirectTracker redirectTracker,
+			boolean ssl, String host, int port, InetAddress[] addresses, int addressIndex) {
+		InetSocketAddress addr = new InetSocketAddress(addresses[addressIndex], port);
 		bootstrapper.get().handler(new NettyHttpChannelInitializer(responseCallback, redirectTracker, ssl, host, port))
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000).option(ChannelOption.TCP_NODELAY, true)
 				.remoteAddress(addr).connect()
-				.addListener(new NettyHttpChannelFutureListener(redirectTracker.method, uri, responseCallback));
+				.addListener(new NettyHttpChannelFutureListener(method, uri, responseCallback, redirectTracker, ssl, host,
+						port, addresses, addressIndex));
 	}
 
 }
