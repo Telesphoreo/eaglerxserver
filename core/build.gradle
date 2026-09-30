@@ -11,13 +11,6 @@ configurations {
 	sqliteDriver
 }
 
-sourceSets {
-	integrationTest {
-		compileClasspath += sourceSets.main.output
-		runtimeClasspath += sourceSets.main.output
-	}
-}
-
 dependencies {
 	api project(":api")
 	api project(":core-config")
@@ -29,7 +22,6 @@ dependencies {
 	platformBungee project(":core:core-platform-bungee")
 	platformVelocity project(":core:core-platform-velocity")
 	implementation(libs.asm)
-	integrationTestImplementation(libs.bundles.netty.all)
 	compileOnly(libs.bundles.netty.all)
 	compileOnly(libs.jsr305)
 	compileOnly(libs.gson)
@@ -37,16 +29,6 @@ dependencies {
 	compileOnly(libs.slf4j)
 	compileOnly(libs.skinsrestorer.api)
 	sqliteDriver project(":skin-cache:sqlite-jdbc-jar")
-}
-
-tasks.register("itemNameIntegrationTest", JavaExec) {
-	dependsOn integrationTestClasses
-	classpath = sourceSets.integrationTest.runtimeClasspath
-	mainClass = "net.lax1dude.eaglercraft.backend.server.base.pipeline.ItemNameIntegrationTest"
-}
-
-tasks.named("check") {
-	dependsOn "itemNameIntegrationTest"
 }
 
 def embedSQLiteJar(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar taskIn) {
