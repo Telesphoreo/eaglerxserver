@@ -656,6 +656,17 @@ public class WebSocketEaglerInitialHandler extends MessageToMessageCodec<ByteBuf
 				ackBuf.release();
 			}
 		}
+		// Inspect the negotiated protocol before Rewind converts outbound packets.
+		if (EquipmentNBTGuard.supports(pipelineData.minecraftProtocol)) {
+			pipeline.addBefore(PipelineTransformer.HANDLER_HANDSHAKE, "eagler-equipment-nbt-guard",
+					new EquipmentNBTGuard(pipelineData.minecraftProtocol,
+							() -> server.logger().warn("Hidden head equipment with an NBT name exceeding 1024 bytes from Eagler (protocol "
+									+ pipelineData.minecraftProtocol + "); further notices suppressed for this connection")));
+		}
+		if (ItemNameGuard.supports(pipelineData.minecraftProtocol)) {
+			pipeline.addBefore(PipelineTransformer.HANDLER_HANDSHAKE, "eagler-item-name-guard",
+					new ItemNameGuard(pipelineData.minecraftProtocol));
+		}
 		vanillaInitializer.flushBufferedPackets(ctx);
 		pipeline.remove(PipelineTransformer.HANDLER_HANDSHAKE);
 		pipelineData.signalPlayState();
