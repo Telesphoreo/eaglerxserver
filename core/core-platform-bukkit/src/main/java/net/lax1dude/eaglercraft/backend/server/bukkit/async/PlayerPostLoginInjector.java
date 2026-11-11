@@ -37,6 +37,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.util.AttributeKey;
 import net.lax1dude.eaglercraft.backend.server.api.bukkit.event.PlayerLoginPostEvent;
+import net.lax1dude.eaglercraft.backend.server.base.pipeline.NOPDummyHandler;
 import net.lax1dude.eaglercraft.backend.server.bukkit.BukkitUnsafe;
 import net.lax1dude.eaglercraft.backend.server.bukkit.PlatformPluginBukkit;
 import net.lax1dude.eaglercraft.backend.server.util.ClassProxy;
@@ -330,7 +331,8 @@ public class PlayerPostLoginInjector {
 	}
 
 	private static boolean isCompressionDisabled(LoginEventContext ctx) {
-		return ctx.compressionDisable || ctx.channel.pipeline().get("splitter") == null;
+		ChannelHandler splitter = ctx.channel.pipeline().get("splitter");
+		return ctx.compressionDisable || splitter == null || splitter == NOPDummyHandler.INSTANCE;
 	}
 
 	private static boolean isCompressionPacket(Object[] args) {

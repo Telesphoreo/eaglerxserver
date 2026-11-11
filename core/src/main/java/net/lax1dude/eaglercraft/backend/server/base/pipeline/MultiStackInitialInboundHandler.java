@@ -33,13 +33,18 @@ public class MultiStackInitialInboundHandler extends ByteToMessageDecoder {
 	private final NettyPipelineData pipelineData;
 	private final List<ChannelHandler> componentsToRemove;
 	private final String bungeeHack;
+	private final ChannelHandler placeholderTarget;
+	private final String placeholderName;
 
 	public MultiStackInitialInboundHandler(PipelineTransformer transformer, NettyPipelineData pipelineData,
-			List<ChannelHandler> componentsToRemove, String bungeeHack) {
+			List<ChannelHandler> componentsToRemove, String bungeeHack, ChannelHandler placeholderTarget,
+			String placeholderName) {
 		this.transformer = transformer;
 		this.pipelineData = pipelineData;
 		this.componentsToRemove = componentsToRemove;
 		this.bungeeHack = bungeeHack;
+		this.placeholderTarget = placeholderTarget;
+		this.placeholderName = placeholderName;
 	}
 
 	@Override
@@ -271,6 +276,9 @@ public class MultiStackInitialInboundHandler extends ByteToMessageDecoder {
 				for (ChannelHandler handler : componentsToRemove) {
 					p.remove(handler);
 				}
+			}
+			if (placeholderTarget != null) {
+				p.replace(placeholderTarget, placeholderName, NOPDummyHandler.INSTANCE);
 			}
 			if (bungeeHack != null) {
 				p.addLast(bungeeHack, NOPDummyHandler.INSTANCE);

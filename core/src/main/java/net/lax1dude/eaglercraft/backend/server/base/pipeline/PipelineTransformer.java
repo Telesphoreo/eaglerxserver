@@ -153,7 +153,11 @@ public class PipelineTransformer {
 		String bungeeHack = null;
 		for (IPipelineComponent comp : components) {
 			if (VANILLA_FRAME_DECODERS.contains(comp.getIdentifiedType())) {
-				pipeline.remove(comp.getHandle());
+				if (keepsNamePlaceholder(comp)) {
+					pipeline.replace(comp.getHandle(), comp.getName(), NOPDummyHandler.INSTANCE);
+				} else {
+					pipeline.remove(comp.getHandle());
+				}
 				if (comp.getIdentifiedType() == EnumPipelineComponent.BUNGEE_LEGACY_KICK_ENCODER) {
 					bungeeHack = comp.getName();
 				}
@@ -187,7 +191,7 @@ public class PipelineTransformer {
 			}
 			if (!eagListener.isTLSRequired()) {
 				MultiStackInitialInboundHandler ms = new MultiStackInitialInboundHandler(this, pipelineData, null,
-						null);
+						null, null, null);
 				if (first == null) {
 					channel.pipeline().addFirst(HANDLER_MULTI_STACK_INITIAL, ms);
 				} else {
@@ -213,10 +217,17 @@ public class PipelineTransformer {
 		List<ChannelHandler> toRemove = new ArrayList<>(4);
 		String first = null;
 		String bungeeHack = null;
+		ChannelHandler placeholderTarget = null;
+		String placeholderName = null;
 		IPipelineComponent haproxy = null;
 		for (IPipelineComponent comp : components) {
 			if (VANILLA_FRAME_DECODERS.contains(comp.getIdentifiedType())) {
-				toRemove.add(comp.getHandle());
+				if (keepsNamePlaceholder(comp)) {
+					placeholderTarget = comp.getHandle();
+					placeholderName = comp.getName();
+				} else {
+					toRemove.add(comp.getHandle());
+				}
 				if (comp.getIdentifiedType() == EnumPipelineComponent.BUNGEE_LEGACY_KICK_ENCODER) {
 					bungeeHack = comp.getName();
 				}
@@ -238,7 +249,8 @@ public class PipelineTransformer {
 			return;
 		}
 		channel.pipeline().addBefore(first, HANDLER_MULTI_STACK_INITIAL,
-				new MultiStackInitialInboundHandler(this, pipelineData, toRemove, bungeeHack));
+				new MultiStackInitialInboundHandler(this, pipelineData, toRemove, bungeeHack, placeholderTarget,
+						placeholderName));
 		EaglerListener eagListener = pipelineData.listenerInfo;
 		if (haproxy != null) {
 			if (eagListener.getConfigData().isForceDisableHAProxy()) {
@@ -248,6 +260,15 @@ public class PipelineTransformer {
 			}
 		}
 		channel.pipeline().addLast(HANDLER_OUTBOUND_THROW, OutboundPacketThrowHandler.INSTANCE);
+	}
+
+	/**
+	 * Bukkit plugins such as Floodgate insert handlers relative to the vanilla "splitter", so
+	 * Eagler connections keep a no-op handler under that name in its place.
+	 */
+	private boolean keepsNamePlaceholder(IPipelineComponent comp) {
+		return comp.getIdentifiedType() == EnumPipelineComponent.FRAME_DECODER
+				&& server.getPlatformType() == EnumPlatformType.BUKKIT;
 	}
 
 	protected void initializeHTTPHandler(NettyPipelineData pipelineData, ISSLContextProvider context,
