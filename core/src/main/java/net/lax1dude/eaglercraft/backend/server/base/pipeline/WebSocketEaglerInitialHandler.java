@@ -667,6 +667,10 @@ public class WebSocketEaglerInitialHandler extends MessageToMessageCodec<ByteBuf
 			pipeline.addBefore(PipelineTransformer.HANDLER_HANDSHAKE, "eagler-item-name-guard",
 					new ItemNameGuard(pipelineData.minecraftProtocol));
 		}
+		if (AreaEffectCloudDataFix.supports(pipelineData.minecraftProtocol)) {
+			pipeline.addBefore(PipelineTransformer.HANDLER_HANDSHAKE, "eagler-area-effect-cloud-data-fix",
+					new AreaEffectCloudDataFix());
+		}
 		vanillaInitializer.flushBufferedPackets(ctx);
 		pipeline.remove(PipelineTransformer.HANDLER_HANDSHAKE);
 		pipelineData.signalPlayState();
